@@ -107,7 +107,7 @@ app.post("/sorting", async (req, res) => {
     } finally {
       await client.close();
     }
-  } else if (req.body.from !== req.body.to) {
+  } else if (req.body.from !== req.body.to && req.body.list?.length > 0) {
     console.log(94, req.body);
     try {
       await client.connect();
@@ -118,14 +118,12 @@ app.post("/sorting", async (req, res) => {
       if (result.deletedCount) {
         await client.db("kanban-board").collection(req.body.to).deleteMany({});
 
-        if (req.body.list?.length > 0) {
-          let result = await client
-            .db("kanban-board")
-            .collection(req.body.to)
-            .insertMany(req.body.list);
-          if (result.insertedCount) {
-            res.send(`result`);
-          }
+        let result = await client
+          .db("kanban-board")
+          .collection(req.body.to)
+          .insertMany(req.body.list);
+        if (result.insertedCount) {
+          res.send(`result`);
         }
       }
     } catch (error) {
@@ -135,8 +133,6 @@ app.post("/sorting", async (req, res) => {
     }
   }
 });
-
-
 
 app.delete(`/delete-todos/:id`, async (req, res) => {
   console.log(113, req.params.id);
