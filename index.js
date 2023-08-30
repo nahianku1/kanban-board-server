@@ -33,7 +33,6 @@ app.get("/", async (req, res) => {
 
 app.post("/create-todos", async (req, res) => {
   try {
-    // console.log(req.body);
     await client.connect();
     let result = await client
       .db("kanban-board")
@@ -49,8 +48,6 @@ app.post("/create-todos", async (req, res) => {
 
 app.put("/update-todos/:id", async (req, res) => {
   try {
-    console.log(req.body);
-    console.log(req.query);
     await client.connect();
     let result = await client
       .db("kanban-board")
@@ -67,7 +64,6 @@ app.put("/update-todos/:id", async (req, res) => {
 });
 
 app.get("/get-todos", async (req, res) => {
-  // console.log(req.query.collection);
   try {
     await client.connect();
     let result = await client
@@ -75,7 +71,6 @@ app.get("/get-todos", async (req, res) => {
       .collection(`${req.query.collection}`)
       .find({})
       .toArray();
-    // console.log(result);
     res.send(result);
   } catch (error) {
     console.log(error);
@@ -98,33 +93,8 @@ app.post("/sorting", async (req, res) => {
           .db("kanban-board")
           .collection(`${req.query.collection}`)
           .insertMany(req.body.list);
-        if (result.insertedCount) {
-          res.send(`result`);
-        }
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      await client.close();
-    }
-  } else if (req.body.from !== req.body.to && req.body.list?.length > 0) {
-    console.log(94, req.body);
-    try {
-      await client.connect();
-      let result = await client
-        .db("kanban-board")
-        .collection(req.body.from)
-        .deleteOne({ _id: `${req.body.item.id}` });
-      if (result.deletedCount) {
-        await client.db("kanban-board").collection(req.body.to).deleteMany({});
 
-        let result = await client
-          .db("kanban-board")
-          .collection(req.body.to)
-          .insertMany(req.body.list);
-        if (result.insertedCount) {
-          res.send(`result`);
-        }
+        res.send(result);
       }
     } catch (error) {
       console.log(error);
@@ -134,8 +104,73 @@ app.post("/sorting", async (req, res) => {
   }
 });
 
+app.post("/sorting-add", async (req, res) => {
+  try {
+    if (req.body.list.length > 0) {
+      await client.connect();
+      await client
+        .db("kanban-board")
+        .collection(`${req.body.from}`)
+        .deleteOne({ _id: `${req.body.item.id}` });
+      await client.connect();
+      let result = await client
+        .db("kanban-board")
+        .collection(`${req.body.to}`)
+        .find({})
+        .count();
+      if (result) {
+        console.log(`hit-3`);
+        await client.connect();
+        await client
+          .db("kanban-board")
+          .collection(`${req.body.to}`)
+          .deleteMany({});
+        if (req.body.to === req.query.collection) {
+          console.log(`hit-4`);
+          await client.connect();
+          let result = await client
+            .db("kanban-board")
+            .collection(`${req.body.to}`)
+            .insertMany(req.body.list);
+          res.send(result);
+        } else {
+          res.send(`res-5`);
+        }
+      } else {
+        await client.connect();
+        if (req.body.to === req.query.collection) {
+          console.log(`hit-5`);
+          await client.connect();
+          let result = await client
+            .db("kanban-board")
+            .collection(`${req.body.to}`)
+            .insertMany(req.body.list);
+          res.send(result);
+        } else {
+          console.log(`hit-6`);
+          res.send(`res-6`);
+        }
+      }
+    } else {
+      if (req.body.from === req.query.collection) {
+        await client.connect();
+        let result = await client
+          .db("kanban-board")
+          .collection(`${req.body.from}`)
+          .deleteMany({});
+        res.send(result);
+      } else {
+        res.send(`res 3`);
+      }
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    await client.close();
+  }
+});
+
 app.delete(`/delete-todos/:id`, async (req, res) => {
-  console.log(113, req.params.id);
   try {
     await client.connect();
     let result = await client
