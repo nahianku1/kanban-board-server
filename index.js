@@ -120,14 +120,14 @@ app.post("/sorting-add", async (req, res) => {
         .count();
       if (result) {
         console.log(`hit-3`);
-        await client.connect();
-        await client
-          .db("kanban-board")
-          .collection(`${req.body.to}`)
-          .deleteMany({});
+
         if (req.body.to === req.query.collection) {
           console.log(`hit-4`);
           await client.connect();
+          await client
+            .db("kanban-board")
+            .collection(`${req.body.to}`)
+            .deleteMany({});
           let result = await client
             .db("kanban-board")
             .collection(`${req.body.to}`)
